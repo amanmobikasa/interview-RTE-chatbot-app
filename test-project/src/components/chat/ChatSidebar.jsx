@@ -1,29 +1,12 @@
 import React from 'react';
-import { User, Bot } from 'lucide-react';
-import { cn } from '../../lib/utils';
-// import { useChat } from '@ai-sdk/react'; // Broken in this env
-import { useCustomChat } from '../../hooks/useCustomChat'; 
-import { useEditorContext } from '../../context/EditorContext';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
+import { useChatContext } from '../../context/ChatContext';
 
 export default function ChatSidebar() {
-  const { editor } = useEditorContext();
-  
-  // Using custom hook to avoid storage/browser restrictions
-  const { messages, input, handleInputChange, handleSubmit, append } = useCustomChat({
-    api: `http://localhost:3001/api/chat`,
-    body: () => ({
-      documentContext: editor ? editor.getHTML() : '',
-    }),
-    initialMessages: [
-         { id: 'welcome', role: 'assistant', content: 'Add effective date as 10 Jan 2026' }
-    ],
-    onError: (err) => console.error('Chat error:', err)
-  });
+  const { messages, handleInputChange, handleSubmit, append } = useChatContext();
 
   const onSendSafe = (text) => {
-      // With custom hook, append is always defined
       append({ role: 'user', content: text });
   };
 

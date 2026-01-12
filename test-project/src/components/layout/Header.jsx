@@ -32,7 +32,7 @@ export default function Header() {
           Back
         </button>
         <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold text-gray-900">na</h1>
+            <h1 className="text-lg font-bold text-gray-900">License Agreement</h1>
             <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded font-medium">New Document</span>
         </div>
       </div>

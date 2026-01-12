@@ -4,13 +4,16 @@ import RichTextEditor from './components/editor/RichTextEditor';
 import ChatSidebar from './components/chat/ChatSidebar'
 import TestChat from './TestChat';;
 import { EditorProvider } from './context/EditorContext';
+import { ChatProvider } from './context/ChatContext';
 
 function App() {
   return (
     <EditorProvider>
-      <Layout rightPanel={<ChatSidebar />}>
-        <RichTextEditor />
-      </Layout>
+      <ChatProvider>
+        <Layout rightPanel={<ChatSidebar />}>
+          <RichTextEditor />
+        </Layout>
+      </ChatProvider>
     </EditorProvider>
   )
 }

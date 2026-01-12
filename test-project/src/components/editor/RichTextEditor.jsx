@@ -5,7 +5,10 @@ import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
+import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
 import EditorToolbar from './EditorToolbar';
+import { BubbleMenu } from '@tiptap/react/menus';
+import { useChatContext } from '../../context/ChatContext';
 
 const CONTENT_TO_STREAM = `
 <h2>COPYRIGHT LICENSING AGREEMENT</h2>
@@ -26,6 +29,7 @@ const CONTENT_TO_STREAM = `
 
 export default function RichTextEditor() {
   const { setEditor } = useEditorContext();
+  const { append } = useChatContext();
   
   const editor = useEditor({
     extensions: [
@@ -37,6 +41,7 @@ export default function RichTextEditor() {
       Placeholder.configure({
         placeholder: 'Start writing...',
       }),
+      BubbleMenuExtension,
     ],
     content: '',
     editorProps: {
@@ -124,6 +129,24 @@ export default function RichTextEditor() {
   return (
     <div className="flex flex-col h-full bg-white relative">
       <EditorToolbar editor={editor} />
+      
+      {editor && (
+        <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
+          <button
+            onClick={() => {
+                const selection = editor.state.selection;
+                const text = editor.state.doc.textBetween(selection.from, selection.to, ' ');
+                if (text) {
+                    append({ role: 'user', content: `Context: "${text}"` });
+                }
+            }}
+            className="bg-black text-white px-3 py-1 rounded-md text-sm hover:bg-gray-800 transition-colors shadow-lg flex items-center gap-2"
+          >
+            Ask AI
+          </button>
+        </BubbleMenu>
+      )}
+
       <EditorContent editor={editor} className="flex-1 overflow-y-auto" />
     </div>
   );

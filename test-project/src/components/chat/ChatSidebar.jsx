@@ -12,10 +12,10 @@ export default function ChatSidebar() {
   
   // Using custom hook to avoid storage/browser restrictions
   const { messages, input, handleInputChange, handleSubmit, append } = useCustomChat({
-    api: `${'http://localhost:3001'}/api/chat`,
-    body: {
+    api: `http://localhost:3001/api/chat`,
+    body: () => ({
       documentContext: editor ? editor.getHTML() : '',
-    },
+    }),
     initialMessages: [
          { id: 'welcome', role: 'assistant', content: 'Add effective date as 10 Jan 2026' }
     ],

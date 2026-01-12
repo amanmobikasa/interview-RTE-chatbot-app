@@ -31,6 +31,9 @@ export function useCustomChat({ api, body, initialMessages = [], onError }) {
     setInput(''); // Clear input immediately
 
     try {
+      // Evaluate body dynamically if it's a function (for fresh context)
+      const requestBody = typeof body === 'function' ? body() : body;
+      
       const response = await fetch(api, {
         method: 'POST',
         headers: {
@@ -38,7 +41,7 @@ export function useCustomChat({ api, body, initialMessages = [], onError }) {
         },
         body: JSON.stringify({
           messages: currentMessages, // Send full history including new message
-          data: body // Pass extra data like keys or context
+          data: requestBody // Pass extra data like keys or context
         }),
       });
 
@@ -46,56 +49,17 @@ export function useCustomChat({ api, body, initialMessages = [], onError }) {
         throw new Error(`Failed to fetch: ${response.statusText}`);
       }
 
-      if (!response.body) return;
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
+      // Parse simple JSON response instead of streaming
+      const data = await response.json();
       
-      // Initialize AI message
-      let aiContent = '';
-      const aiMessageId = (Date.now() + 1).toString();
+      // Add AI response to messages
+      const aiMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: data.message || data.text || ''
+      };
       
-      setMessages((prev) => [...prev, { id: aiMessageId, role: 'assistant', content: '' }]);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = decoder.decode(value, { stream: true });
-        // The Vercel AI SDK 'streamText' sends protocol data: 0:"text"\n
-        
-        const lines = chunk.split('\n');
-        for (const line of lines) {
-            if (!line) continue;
-            
-            // Format 0: "text"
-            if (line.startsWith('0:')) {
-                const jsonStr = line.slice(2);
-                try {
-                    // It's JSON stringified string, e.g. "Hello" -> remove quotes? No JSON.parse breaks it down.
-                    // 0:"H" -> JSON.parse("H") = H
-                    const text = JSON.parse(jsonStr);
-                    aiContent += text;
-                } catch (e) {
-                   // console.warn('Failed to parse chunk', line);
-                }
-            } else {
-                // Might be error or other parts.
-                // If it's simple text mode (legacy), it might just be text.
-                // But Vercel SDK v3+ usually uses protocol.
-            }
-        }
-        
-        // Update the last message
-        setMessages((prev) => {
-            const newMessages = [...prev];
-            const lastMsg = newMessages[newMessages.length - 1];
-            if (lastMsg && lastMsg.role === 'assistant') {
-                lastMsg.content = aiContent;
-            }
-            return newMessages;
-        });
-      }
+      setMessages((prev) => [...prev, aiMessage]);
       
     } catch (err) {
       if (onError) onError(err);
